@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Tarefas G</string>
+    <string-array name="spinner_priority">
+        <item>Baixa</item>
+        <item>Média</item>
+        <item>Alta</item>
+    </string-array>
+</resources>
