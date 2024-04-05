@@ -1,13 +1,19 @@
 package com.example.tarefasg;
 
+import static android.content.ContentValues.TAG;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.DatePickerDialog;
+import android.app.Dialog;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -16,6 +22,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+
+import com.google.android.material.button.MaterialButton;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -30,7 +38,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView taskDate;
     private Spinner taskPriotiry;
     private Button taskSave;
-
+    private Button taskDateButton;
+    private DatePickerDialog.OnDateSetListener mDate;
     public ListView listViewTask;
 
     @Override
@@ -41,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
         listViewTask = (ListView) findViewById(R.id.listView);
         taskName = findViewById(R.id.textTask);
         taskPriotiry = findViewById(R.id.spineer);
+        taskDate = findViewById(R.id.textDate);
         taskSave = findViewById(R.id.buttonSave);
 
         taskSave.setOnClickListener(new View.OnClickListener() {
@@ -51,29 +61,51 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        taskDate =  findViewById(R.id.textDate);
+        taskDateButton = findViewById(R.id.buttonDate);
 
-        taskDate.setOnClickListener(new View.OnClickListener() {
+        taskDateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showCalendar();
+                Calendar cal = Calendar.getInstance();
+                int year = cal.get(Calendar.YEAR);
+                int month = cal.get(Calendar.MONTH);
+                int day = cal.get(Calendar.DAY_OF_MONTH);
+
+                DatePickerDialog dialog = new DatePickerDialog(
+                        MainActivity.this,
+                        android.R.style.Theme_Holo_Light_Dialog_MinWidth,
+                        mDate,
+                        year, month, day);
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                dialog.show();
             }
         });
+
+        mDate = new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                month = month + 1;
+                Log.d(TAG, "onDateSet: date: " + year + "/" + month + "/" + dayOfMonth);
+
+                String date = month + "/" + dayOfMonth + "/" + year;
+                taskDate.setText(date);
+            }
+        };
         createBd();
         listBd();
     }
 
-    public void createBd(){
+    public void createBd() {
         try {
             bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
             bd.execSQL("CREATE TABLE IF NOT EXISTS task( id_task INTEGER PRIMARY KEY AUTOINCREMENT, nome varchar(255), data_task date, priority int)");
             bd.close();
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void listBd(){
+    public void listBd() {
         try {
             bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
             Cursor cursorBd = bd.rawQuery("SELECT id_task, nome, data_task, priority  FROM task", null);
@@ -91,23 +123,23 @@ public class MainActivity extends AppCompatActivity {
                     String dataTarefa = cursorBd.getString(2);
                     String prioridadeTarefa = calculePriorityString(cursorBd.getInt(3));
 
-                    String taskInfo =  "id - " + idTarefa + " - " +  nomeTarefa + " - Data: " + dataTarefa + " - Importância: " + prioridadeTarefa;
+                    String taskInfo = "id - " + idTarefa + " - " + nomeTarefa + " - Data: " + dataTarefa + " - Importância: " + prioridadeTarefa;
                     lines.add(taskInfo);
                 } while (cursorBd.moveToNext());
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void insertBd(){
+    public void insertBd() {
         int intPriotiry = calculePriority(taskPriotiry.getSelectedItem().toString());
 
         bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
         String sqlInsert = "INSERT INTO task (nome, data_task, priority) VALUES(?, ?, ?)";
         SQLiteStatement stmt = bd.compileStatement(sqlInsert);
         stmt.bindString(1, taskName.getText().toString());
-        stmt.bindString( 2, convertDate(taskDate.getText().toString()));
+        stmt.bindString(2, convertDate(taskDate.getText().toString()));
         stmt.bindLong(3, intPriotiry);
         stmt.executeInsert();
     }
@@ -125,10 +157,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public int calculePriority(String stringTaskPriority){
+    public int calculePriority(String stringTaskPriority) {
         int intPriority = 0;
 
-        switch (stringTaskPriority){
+        switch (stringTaskPriority) {
             case "Alta":
                 intPriority = 3;
                 break;
@@ -148,10 +180,10 @@ public class MainActivity extends AppCompatActivity {
         return intPriority;
     }
 
-    public String calculePriorityString(int intTaskPriority){
+    public String calculePriorityString(int intTaskPriority) {
         String StringPriority = "";
 
-        switch (intTaskPriority){
+        switch (intTaskPriority) {
             case 3:
                 StringPriority = "Alta";
                 break;
@@ -169,17 +201,5 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return StringPriority;
-    }
-
-
-    private void showCalendar() {
-        DatePickerDialog dialogDate = new DatePickerDialog(this,R.style.DialogTheme, new DatePickerDialog.OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                taskDate.setText(String.valueOf(year)+ "."+ String.valueOf(month + 1)+ "." + String.valueOf(dayOfMonth));
-            }
-        }, 2024, 04, 04);
-
-        dialogDate.show();
     }
 }

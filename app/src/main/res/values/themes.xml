@@ -8,6 +8,5 @@
     <style name="Theme.TarefasG" parent="Base.Theme.TarefasG" />
     <style name="DialogTheme" parent="Theme.Material3.DayNight.Dialog">
         <item name="colorAccent">@color/black</item>
-
     </style>
 </resources>
