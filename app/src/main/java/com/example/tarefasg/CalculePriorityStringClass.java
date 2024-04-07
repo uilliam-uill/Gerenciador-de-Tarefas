@@ -1,6 +1,6 @@
 package com.example.tarefasg;
 
-public class calculePriorityStringClass {
+public class CalculePriorityStringClass {
     public String calculePriorityString(int intTaskPriority) {
         String StringPriority = "";
 

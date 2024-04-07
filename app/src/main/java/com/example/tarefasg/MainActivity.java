@@ -2,13 +2,13 @@ package com.example.tarefasg;
 
 import static android.content.ContentValues.TAG;
 
+import static java.security.AccessController.getContext;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.DatePickerDialog;
-import android.app.Dialog;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -23,21 +23,13 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.google.android.material.button.MaterialButton;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
-
-import com.example.tarefasg.calculePriorityStringClass;
-import com.example.tarefasg.calculePriorityClass;
-import com.example.tarefasg.convertDateClass;
 
 public class MainActivity extends AppCompatActivity {
-    calculePriorityStringClass convertString = new calculePriorityStringClass();
-    calculePriorityClass convertInt = new calculePriorityClass();
+    CalculePriorityStringClass convertString = new CalculePriorityStringClass();
+    CalculePriorityClass convertInt = new CalculePriorityClass();
+    ViewTask viewTask = new ViewTask();
     private SQLiteDatabase bd;
     private EditText taskName;
     private TextView taskDate;
@@ -63,7 +55,31 @@ public class MainActivity extends AppCompatActivity {
         viewButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                try {
+                    String sql = viewTask.returnSql(spinnerView.getSelectedItem().toString());
+                    bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
+                    Cursor cursorBd = bd.rawQuery(sql, null);
+                    ArrayList<String> linesConsult = new ArrayList<String>();
+                    ArrayAdapter<String> adapterConsult = new ArrayAdapter<>(
+                            v.getContext(),
+                            android.R.layout.simple_list_item_1,
+                            linesConsult
+                    );
+                    listViewTask.setAdapter(adapterConsult);
+                    if (cursorBd.moveToFirst()) {
+                        do {
+                            int idTarefa = cursorBd.getInt(0);
+                            String nomeTarefa = cursorBd.getString(1);
+                            String dataTarefa = cursorBd.getString(2);
+                            String prioridadeTarefa = convertString.calculePriorityString(cursorBd.getInt(3));
 
+                            String taskInfo = "id - " + idTarefa + " - " + nomeTarefa + " - Data: " + dataTarefa + " - Importância: " + prioridadeTarefa;
+                            linesConsult.add(taskInfo);
+                        } while (cursorBd.moveToNext());
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }
         });
         taskSave = findViewById(R.id.buttonSave);
@@ -112,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
     public void createBd() {
         try {
             bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
-            bd.execSQL("CREATE TABLE IF NOT EXISTS task( id_task INTEGER PRIMARY KEY AUTOINCREMENT, nome varchar(255), data_task date, priority int)");
+            bd.execSQL("CREATE TABLE IF NOT EXISTS task( id_task INTEGER PRIMARY KEY AUTOINCREMENT,completed boolean, nome varchar(255), data_task date, priority int)");
             bd.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -150,10 +166,10 @@ public class MainActivity extends AppCompatActivity {
         int intPriotiry = convertInt.calculePriority(taskPriotiry.getSelectedItem().toString());
 
         bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
-        String sqlInsert = "INSERT INTO task (nome, data_task, priority) VALUES(?, ?, ?)";
+        String sqlInsert = "INSERT INTO task (nome, data_task, priority, completed) VALUES(?, ?, ?, false)";
         SQLiteStatement stmt = bd.compileStatement(sqlInsert);
         stmt.bindString(1, taskName.getText().toString());
-        stmt.bindString(2, convertDateClass.convertDate(taskDate.getText().toString()));
+        stmt.bindString(2, ConvertDateClass.convertDate(taskDate.getText().toString()));
         stmt.bindLong(3, intPriotiry);
         stmt.executeInsert();
 
