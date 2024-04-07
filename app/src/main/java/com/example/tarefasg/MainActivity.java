@@ -31,14 +31,21 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
-public class MainActivity extends AppCompatActivity {
+import com.example.tarefasg.calculePriorityStringClass;
+import com.example.tarefasg.calculePriorityClass;
+import com.example.tarefasg.convertDateClass;
 
+public class MainActivity extends AppCompatActivity {
+    calculePriorityStringClass convertString = new calculePriorityStringClass();
+    calculePriorityClass convertInt = new calculePriorityClass();
     private SQLiteDatabase bd;
     private EditText taskName;
     private TextView taskDate;
     private Spinner taskPriotiry;
+    private Spinner spinnerView;
     private Button taskSave;
     private Button taskDateButton;
+    private Button viewButton;
     private DatePickerDialog.OnDateSetListener mDate;
     public ListView listViewTask;
 
@@ -51,8 +58,15 @@ public class MainActivity extends AppCompatActivity {
         taskName = findViewById(R.id.textTask);
         taskPriotiry = findViewById(R.id.spineer);
         taskDate = findViewById(R.id.textDate);
-        taskSave = findViewById(R.id.buttonSave);
+        spinnerView = findViewById(R.id.spinnerView);
+        viewButton = findViewById(R.id.buttonView);
+        viewButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+            }
+        });
+        taskSave = findViewById(R.id.buttonSave);
         taskSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -62,7 +76,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         taskDateButton = findViewById(R.id.buttonDate);
-
         taskDateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -79,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
                 dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 dialog.show();
             }
+
         });
 
         mDate = new DatePickerDialog.OnDateSetListener() {
@@ -87,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
                 month = month + 1;
                 Log.d(TAG, "onDateSet: date: " + year + "/" + month + "/" + dayOfMonth);
 
-                String date = month + "/" + dayOfMonth + "/" + year;
+                String date = dayOfMonth + "/" + month + "/" + year;
                 taskDate.setText(date);
             }
         };
@@ -121,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
                     int idTarefa = cursorBd.getInt(0);
                     String nomeTarefa = cursorBd.getString(1);
                     String dataTarefa = cursorBd.getString(2);
-                    String prioridadeTarefa = calculePriorityString(cursorBd.getInt(3));
+                    String prioridadeTarefa = convertString.calculePriorityString(cursorBd.getInt(3));
 
                     String taskInfo = "id - " + idTarefa + " - " + nomeTarefa + " - Data: " + dataTarefa + " - Importância: " + prioridadeTarefa;
                     lines.add(taskInfo);
@@ -133,73 +147,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void insertBd() {
-        int intPriotiry = calculePriority(taskPriotiry.getSelectedItem().toString());
+        int intPriotiry = convertInt.calculePriority(taskPriotiry.getSelectedItem().toString());
 
         bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
         String sqlInsert = "INSERT INTO task (nome, data_task, priority) VALUES(?, ?, ?)";
         SQLiteStatement stmt = bd.compileStatement(sqlInsert);
         stmt.bindString(1, taskName.getText().toString());
-        stmt.bindString(2, convertDate(taskDate.getText().toString()));
+        stmt.bindString(2, convertDateClass.convertDate(taskDate.getText().toString()));
         stmt.bindLong(3, intPriotiry);
         stmt.executeInsert();
-    }
 
-    public String convertDate(String dateString) {
-        SimpleDateFormat originalFormat = new SimpleDateFormat("dd/MM/yyyy");
-        SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd");
-        try {
-            Date date = originalFormat.parse(dateString);
-            return isoFormat.format(date);
-        } catch (ParseException e) {
-            e.printStackTrace();
-            // Lida com o erro de parse
-            return null;
-        }
-    }
-
-    public int calculePriority(String stringTaskPriority) {
-        int intPriority = 0;
-
-        switch (stringTaskPriority) {
-            case "Alta":
-                intPriority = 3;
-                break;
-
-            case "Média":
-                intPriority = 2;
-                break;
-
-            case "Baixa":
-                intPriority = 1;
-                break;
-
-            default:
-                intPriority = 1;
-                break;
-        }
-        return intPriority;
-    }
-
-    public String calculePriorityString(int intTaskPriority) {
-        String StringPriority = "";
-
-        switch (intTaskPriority) {
-            case 3:
-                StringPriority = "Alta";
-                break;
-
-            case 2:
-                StringPriority = "Média";
-                break;
-
-            case 1:
-                StringPriority = "Baixa";
-                break;
-
-            default:
-                StringPriority = "Baixa";
-                break;
-        }
-        return StringPriority;
+        taskName.setText("");
+        taskDate.setText("Escolha data");
     }
 }

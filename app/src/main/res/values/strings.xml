@@ -5,4 +5,12 @@
         <item>Média</item>
         <item>Alta</item>
     </string-array>
+
+    <string-array name="spinner_view">
+        <item>Prioridade</item>
+        <item>Concluidas</item>
+        <item>Não concluidas</item>
+        <item>Data proxima</item>
+        <item>Data distante</item>
+    </string-array>
 </resources>
