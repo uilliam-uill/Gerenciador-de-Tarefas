@@ -6,7 +6,9 @@ import static java.security.AccessController.getContext;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
@@ -15,6 +17,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
@@ -39,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private Button taskDateButton;
     private Button viewButton;
     private DatePickerDialog.OnDateSetListener mDate;
+    private  EditText id_task;
     public ListView listViewTask;
 
     @Override
@@ -47,9 +51,19 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         listViewTask = (ListView) findViewById(R.id.listView);
+        listViewTask.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String itemClicked = (String) parent.getItemAtPosition(position);
+                String primeiroCaractere = itemClicked.substring(0, 1);
+                dialogMesage(itemClicked, Integer.parseInt(primeiroCaractere));
+            }
+        });
+
         taskName = findViewById(R.id.textTask);
         taskPriotiry = findViewById(R.id.spineer);
         taskDate = findViewById(R.id.textDate);
+        id_task = findViewById(R.id.id_task);
         spinnerView = findViewById(R.id.spinnerView);
         viewButton = findViewById(R.id.buttonView);
         viewButton.setOnClickListener(new View.OnClickListener() {
@@ -153,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
                     String dataTarefa = cursorBd.getString(2);
                     String prioridadeTarefa = convertString.calculePriorityString(cursorBd.getInt(3));
 
-                    String taskInfo = "id - " + idTarefa + " - " + nomeTarefa + " - Data: " + dataTarefa + " - Importância: " + prioridadeTarefa;
+                    String taskInfo = idTarefa + " - " + nomeTarefa + " - Data: " + dataTarefa + " - Importância: " + prioridadeTarefa;
                     lines.add(taskInfo);
                 } while (cursorBd.moveToNext());
             }
@@ -175,5 +189,53 @@ public class MainActivity extends AppCompatActivity {
 
         taskName.setText("");
         taskDate.setText("Escolha data");
+    }
+
+    public void dialogMesage(String taksName, int id_task){
+        AlertDialog.Builder msgDialog = new AlertDialog.Builder(this);
+        msgDialog.setTitle(taksName);
+        msgDialog.setPositiveButton("Excluir", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
+                String sqlDelete = "DELETE FROM task WHERE id_task = ?";
+                SQLiteStatement stmt = bd.compileStatement(sqlDelete);
+                stmt.bindLong(1, id_task);
+                stmt.executeUpdateDelete();
+            }
+        });
+        msgDialog.setPositiveButton("Editar", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
+                String sqlUpdate = "UPDATE task SET completed = true WHERE id_task = ?";
+                SQLiteStatement stmt = bd.compileStatement(sqlUpdate);
+                stmt.bindLong(1, id_task);
+                stmt.executeUpdateDelete();
+            }
+        });
+        msgDialog.setPositiveButton("Concluir", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
+                String sqlSelect = "SELECT id_task, nome, data_task, priority  FROM task WHERE id_task = ?";
+                Cursor cursorBd = bd.rawQuery(sqlSelect + id_task, null);
+                SQLiteStatement stmt = bd.compileStatement(sqlSelect);
+                stmt.bindLong(1, id_task);
+                stmt.executeUpdateDelete();
+                if (cursorBd.moveToFirst()) {
+                    do {
+                        int idTarefa = cursorBd.getInt(0);
+                        String nomeTarefa = cursorBd.getString(1);
+                        String dataTarefa = cursorBd.getString(2);
+                        String prioridadeTarefa = convertString.calculePriorityString(cursorBd.getInt(3));
+
+                        taskName.setText(nomeTarefa);
+                        taskDate.setText(dataTarefa);
+                    } while (cursorBd.moveToNext());
+                }
+            }
+        });
+        msgDialog.show();
     }
 }

@@ -21,7 +21,7 @@ public class ViewTask {
                 break;
 
             case "Data distante":
-                choice = "SELECT id_task, nome, data_task, priority FROM task WHERE DATE(data_task) <= DATE('now')" +
+                choice = "SELECT id_task, nome, data_task, priority FROM task WHERE DATE(data_task) <= DATE('now') " +
                         " ORDER BY DATE(data_task) DESC";
                 break;
         }
