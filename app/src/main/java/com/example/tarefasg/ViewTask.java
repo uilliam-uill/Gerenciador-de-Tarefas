@@ -1,10 +1,12 @@
 package com.example.tarefasg;
 
 public class ViewTask {
+
     public String returnSql(String choice){
         switch (choice) {
             case "Prioridade":
-                choice = "SELECT id_task, nome, data_task, priority FROM task ORDER BY priority DESC";
+                choice = "SELECT id_task, nome, data_task, priority FROM task ORDER BY priority DESC " +
+                        " WHERE completed = false";
                 break;
 
             case "Concluidas":

@@ -13,7 +13,6 @@ public class ConvertDateClass {
             return isoFormat.format(date);
         } catch (ParseException e) {
             e.printStackTrace();
-            // Lida com o erro de parse
             return null;
         }
     }
