@@ -6,6 +6,7 @@ import static java.security.AccessController.getContext;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.DialogInterface;
@@ -126,7 +127,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 insertBd();
-                listBd();
             }
         });
 
@@ -200,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
                     String dataTarefa = cursorBd.getString(2);
                     String prioridadeTarefa = convertString.calculePriorityString(cursorBd.getInt(3));
 
-                    String taskInfo = idTarefa + " - " + nomeTarefa + " - Data: " + dataTarefa + " - Importância: " + prioridadeTarefa;
+                    String taskInfo = idTarefa + " - " + nomeTarefa + " - " + dataTarefa + " - Nivel: " + prioridadeTarefa;
                     lines.add(taskInfo);
                 } while (cursorBd.moveToNext());
             }
@@ -209,10 +209,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("ShowToast")
     public void insertBd() {
         int intPriotiry = convertInt.calculePriority(taskPriotiry.getSelectedItem().toString());
 
-        bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
         String sqlInsert = "INSERT INTO task (nome, data_task, priority, completed) VALUES(?, ?, ?, false)";
         SQLiteStatement stmt = bd.compileStatement(sqlInsert);
         stmt.bindString(1, taskName.getText().toString());
@@ -222,11 +222,11 @@ public class MainActivity extends AppCompatActivity {
 
         taskName.setText("");
         taskDate.setText("Selecione");
-        Toast.makeText(this, "Inserido com Sucesso", Toast.LENGTH_SHORT);
+        Toast.makeText(this, "Inserido com Sucesso", Toast.LENGTH_SHORT).show();
+        listBd();
     }
 
     public void update() {
-        bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
         String sqlUpdate = "UPDATE task SET nome = ?, data_task = ?, priority = ? WHERE id_task = ?";
         int intPriotiry = convertInt.calculePriority(taskPriotiry.getSelectedItem().toString());
         SQLiteStatement stmt = bd.compileStatement(sqlUpdate);
@@ -240,17 +240,18 @@ public class MainActivity extends AppCompatActivity {
         taskSave.setVisibility(View.VISIBLE);
         taskName.setText("");
         taskDate.setText("Selecione");
-        Toast.makeText(this, "Atualizado com Sucesso", Toast.LENGTH_SHORT);
+        Toast.makeText(this, "Atualizado com Sucesso", Toast.LENGTH_SHORT).show();
+        listBd();
     }
 
     public void delete(int id_task) {
-        bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
         String sqlDelete = "DELETE FROM task WHERE id_task = ?";
         SQLiteStatement stmtDelete = bd.compileStatement(sqlDelete);
         stmtDelete.bindLong(1, id_task);
         stmtDelete.executeUpdateDelete();
         stmtDelete.close();
-        Toast.makeText(this, "Excluido com Sucesso", Toast.LENGTH_SHORT);
+        Toast.makeText(this, "Excluido com Sucesso", Toast.LENGTH_SHORT).show();
+        listBd();
     }
 
     private int extractTaskId(String itemClicked) throws NumberFormatException {
@@ -312,6 +313,7 @@ public class MainActivity extends AppCompatActivity {
                 stmtCm.bindLong(1, id_task);
                 stmtCm.executeUpdateDelete();
                 stmtCm.close();
+                listBd();
             }
         });
         msgDialog.show();
@@ -326,8 +328,9 @@ public class MainActivity extends AppCompatActivity {
             String nameTask = cursor.getString(0);
             String dateTask = cursor.getString(1);
             String priorityTask = convertString.calculePriorityString(cursor.getInt(2));
-            String textSpeak = "A atividade mais proxima é " + nameTask + " no dia " + dateTask
+            String textSpeak = "A atividade mais prossima é " + nameTask + " no dia " + dateTask
                     + " e sua prioridade é " + priorityTask;
+            //escrevi proxima com "ss" pra a voz falar a palavra correta 
             speakText = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
                 @Override
                 public void onInit(int status) {

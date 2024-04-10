@@ -127,8 +127,8 @@
 
     <Spinner
         android:id="@+id/spinnerView"
-        android:layout_width="142dp"
-        android:layout_height="52dp"
+        android:layout_width="169dp"
+        android:layout_height="57dp"
         android:layout_marginBottom="59dp"
         android:entries="@array/spinner_view"
         app:layout_constraintBottom_toTopOf="@+id/textTask"
