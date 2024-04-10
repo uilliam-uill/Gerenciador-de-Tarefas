@@ -79,8 +79,10 @@
         android:layout_marginTop="2dp"
         android:layout_marginEnd="132dp"
         android:text="Salvar"
+        app:icon="@android:drawable/ic_menu_save"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonUpdate" />
+        app:layout_constraintTop_toBottomOf="@+id/buttonUpdate"
+        app:rippleColor="@color/green" />
 
     <TextView
         android:id="@+id/textView5"
@@ -125,8 +127,8 @@
 
     <Spinner
         android:id="@+id/spinnerView"
-        android:layout_width="183dp"
-        android:layout_height="48dp"
+        android:layout_width="142dp"
+        android:layout_height="52dp"
         android:layout_marginBottom="59dp"
         android:entries="@array/spinner_view"
         app:layout_constraintBottom_toTopOf="@+id/textTask"
@@ -181,5 +183,15 @@
         android:text="Atualizar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/spineer" />
+
+    <Button
+        android:id="@+id/buttonProx"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="16dp"
+        android:text="Proxima T"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/listView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
