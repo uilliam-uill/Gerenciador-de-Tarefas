@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     public ListView listViewTask;
     private TextView textIdTask;
     private TextView textViewIdTask;
+    private TextView textDescription;
     private Button updateButton;
     TextToSpeech speakText;
 
@@ -74,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
         });
         textIdTask = findViewById(R.id.textIdTask);
         textViewIdTask = findViewById(R.id.id_task);
+        textDescription = findViewById(R.id.descripitionText);
         textIdTask.setVisibility(View.INVISIBLE);
         textViewIdTask.setVisibility(View.INVISIBLE);
         updateButton = findViewById(R.id.buttonUpdate);
@@ -175,7 +177,9 @@ public class MainActivity extends AppCompatActivity {
     public void createBd() {
         try {
             bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
-            bd.execSQL("CREATE TABLE IF NOT EXISTS task( id_task INTEGER PRIMARY KEY AUTOINCREMENT,completed boolean, nome varchar(255), data_task date, priority int)");
+            bd.execSQL("DROP TABLE TASK");
+            bd.execSQL("CREATE TABLE IF NOT EXISTS task( id_task INTEGER PRIMARY KEY AUTOINCREMENT,completed boolean," +
+                    "description varchar(255), nome varchar(255), data_task date, priority int)");
             bd.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -185,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
     public void listBd() {
         try {
             bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
-            Cursor cursorBd = bd.rawQuery("SELECT id_task, nome, data_task, priority  FROM task WHERE completed = 0", null);
+            Cursor cursorBd = bd.rawQuery("SELECT id_task, nome, description, data_task, priority  FROM task WHERE completed = 0", null);
             ArrayList<String> lines = new ArrayList<String>();
             ArrayAdapter myAdapter = new ArrayAdapter(
                     this,
@@ -330,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
             String priorityTask = convertString.calculePriorityString(cursor.getInt(2));
             String textSpeak = "A atividade mais prossima é " + nameTask + " no dia " + dateTask
                     + " e sua prioridade é " + priorityTask;
-            //escrevi proxima com "ss" pra a voz falar a palavra correta 
+            //escrevi proxima com "ss" pra a voz falar a palavra correta
             speakText = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
                 @Override
                 public void onInit(int status) {
