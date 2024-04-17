@@ -2,8 +2,6 @@ package com.example.tarefasg;
 
 import static android.content.ContentValues.TAG;
 
-import static java.security.AccessController.getContext;
-
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
@@ -25,19 +23,24 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     CalculePriorityStringClass convertString = new CalculePriorityStringClass();
     CalculePriorityClass convertInt = new CalculePriorityClass();
     ViewTask viewTask = new ViewTask();
     private SQLiteDatabase bd;
+    private ImageView time;
     private EditText taskName;
     private TextView taskDate;
     private Spinner taskPriotiry;
@@ -60,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //time.setImageResource(R.drawable.time_after);
         listViewTask = (ListView) findViewById(R.id.listView);
         listViewTask.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -93,6 +97,8 @@ public class MainActivity extends AppCompatActivity {
         taskDate = findViewById(R.id.textDate);
         id_task = findViewById(R.id.id_task);
         spinnerView = findViewById(R.id.spinnerView);
+
+        //FILTRO DE VISUALIZAÇÃO
         viewButton = findViewById(R.id.buttonView);
         viewButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -114,24 +120,33 @@ public class MainActivity extends AppCompatActivity {
                             String nomeTarefa = cursorBd.getString(1);
                             String dataTarefa = cursorBd.getString(2);
                             String prioridadeTarefa = convertString.calculePriorityString(cursorBd.getInt(3));
-
-                            String taskInfo = "id - " + idTarefa + " - " + nomeTarefa + " - Data: " + dataTarefa + " - Importância: " + prioridadeTarefa;
+                            String descriaoTarefa = cursorBd.getString(4);
+                            String taskInfo = idTarefa + " - Tarefa: " + nomeTarefa + " - Descrição: "+ descriaoTarefa +" - Data: " + dataTarefa + " - Nivel: " + prioridadeTarefa;
                             linesConsult.add(taskInfo);
                         } while (cursorBd.moveToNext());
                     }
-                } catch (Exception e) {
+                }catch (Exception e){
                     e.printStackTrace();
                 }
             }
         });
+
+
+
+        //BOTÃO QUE INSERE NO BANCO
         taskSave = findViewById(R.id.buttonSave);
         taskSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                insertBd();
+                if(taskName == null || taskDate == null) {
+                    Toast.makeText(MainActivity.this, "Preencha todos os campos", Toast.LENGTH_SHORT).show();
+                } else {
+                    insertBd();
+                }
             }
         });
 
+        //BOTÃO PARA DATA
         taskDateButton = findViewById(R.id.buttonDate);
         taskDateButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -152,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
 
         });
 
+        // LER A PROXIMA ATIVIDADE
         readTask = findViewById(R.id.buttonProx);
         readTask.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -165,7 +181,6 @@ public class MainActivity extends AppCompatActivity {
             public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
                 month = month + 1;
                 Log.d(TAG, "onDateSet: date: " + year + "/" + month + "/" + dayOfMonth);
-
                 String date = dayOfMonth + "/" + month + "/" + year;
                 taskDate.setText(date);
             }
@@ -177,19 +192,20 @@ public class MainActivity extends AppCompatActivity {
     public void createBd() {
         try {
             bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
-            bd.execSQL("DROP TABLE TASK");
             bd.execSQL("CREATE TABLE IF NOT EXISTS task( id_task INTEGER PRIMARY KEY AUTOINCREMENT,completed boolean," +
-                    "description varchar(255), nome varchar(255), data_task date, priority int)");
+                    " description_task varchar(255), nome varchar(255), data_task date, priority int)");
             bd.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    //LIST DADOS DO BANCO
+    @SuppressLint("ResourceType")
     public void listBd() {
         try {
             bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
-            Cursor cursorBd = bd.rawQuery("SELECT id_task, nome, description, data_task, priority  FROM task WHERE completed = 0", null);
+            Cursor cursorBd = bd.rawQuery("SELECT id_task, nome, data_task, priority, description_task  FROM task WHERE completed = 0 ORDER BY DATE(data_task) ASC", null);
             ArrayList<String> lines = new ArrayList<String>();
             ArrayAdapter myAdapter = new ArrayAdapter(
                     this,
@@ -203,9 +219,20 @@ public class MainActivity extends AppCompatActivity {
                     String nomeTarefa = cursorBd.getString(1);
                     String dataTarefa = cursorBd.getString(2);
                     String prioridadeTarefa = convertString.calculePriorityString(cursorBd.getInt(3));
+                    String descricaoTarefa = cursorBd.getString(4);
 
-                    String taskInfo = idTarefa + " - " + nomeTarefa + " - " + dataTarefa + " - Nivel: " + prioridadeTarefa;
-                    lines.add(taskInfo);
+                    String taskInfo = idTarefa + " - Tarefa: " + nomeTarefa + " - Descrição: " + descricaoTarefa + " - Data: " + dataTarefa + " - Nivel: " + prioridadeTarefa;
+
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    Date currentDate = new Date();
+                    Date taskDate = sdf.parse(dataTarefa);
+                    if (taskDate.before(currentDate)) {
+                       // time = findViewById(R.id.image);
+
+                        lines.add(taskInfo);
+                    } else {
+                        lines.add(taskInfo);
+                    }
                 } while (cursorBd.moveToNext());
             }
         } catch (Exception e) {
@@ -213,17 +240,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    // INSERT
     @SuppressLint("ShowToast")
     public void insertBd() {
         int intPriotiry = convertInt.calculePriority(taskPriotiry.getSelectedItem().toString());
 
-        String sqlInsert = "INSERT INTO task (nome, data_task, priority, completed) VALUES(?, ?, ?, false)";
+        String sqlInsert = "INSERT INTO task (nome, data_task, priority, description_task, completed) VALUES(?, ?, ?, ?, 0)";
         SQLiteStatement stmt = bd.compileStatement(sqlInsert);
         stmt.bindString(1, taskName.getText().toString());
         stmt.bindString(2, ConvertDateClass.convertDate(taskDate.getText().toString()));
         stmt.bindLong(3, intPriotiry);
+        stmt.bindString(4, textDescription.getText().toString());
         stmt.executeInsert();
 
+        textDescription.setText("");
         taskName.setText("");
         taskDate.setText("Selecione");
         Toast.makeText(this, "Inserido com Sucesso", Toast.LENGTH_SHORT).show();
@@ -231,18 +262,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void update() {
-        String sqlUpdate = "UPDATE task SET nome = ?, data_task = ?, priority = ? WHERE id_task = ?";
+        String sqlUpdate = "UPDATE task SET nome = ?, data_task = ?, priority = ?, description_task = ? WHERE id_task = ?";
         int intPriotiry = convertInt.calculePriority(taskPriotiry.getSelectedItem().toString());
         SQLiteStatement stmt = bd.compileStatement(sqlUpdate);
         stmt.bindString(1, taskName.getText().toString());
         stmt.bindString(2, ConvertDateClass.convertDate(taskDate.getText().toString()));
         stmt.bindLong(3, intPriotiry);
-        stmt.bindLong(4, Integer.parseInt(textIdTask.getText().toString()));
+        stmt.bindString(4, textDescription.getText().toString());
+        stmt.bindLong(5, Integer.parseInt(textIdTask.getText().toString()));
         stmt.executeUpdateDelete();
         stmt.close();
         updateButton.setVisibility(View.INVISIBLE);
         taskSave.setVisibility(View.VISIBLE);
         taskName.setText("");
+        textDescription.setText("");
         taskDate.setText("Selecione");
         Toast.makeText(this, "Atualizado com Sucesso", Toast.LENGTH_SHORT).show();
         listBd();
@@ -279,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
         msgDialog.setNegativeButton("Editar", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                String sqlUpdate = "SELECT id_task, nome, data_task, priority FROM task WHERE id_task = ?";
+                String sqlUpdate = "SELECT id_task, nome, data_task, priority, description_task FROM task WHERE id_task = ?";
                 Cursor cursorBd = null;
                 try {
                     cursorBd = bd.rawQuery(sqlUpdate, new String[]{String.valueOf(id_task)});
@@ -289,12 +322,14 @@ public class MainActivity extends AppCompatActivity {
                             String nomeTarefa = cursorBd.getString(1);
                             String dataTarefa = cursorBd.getString(2);
                             String prioridadeTarefa = convertString.calculePriorityString(cursorBd.getInt(3));
+                            String descricaoTarefa = cursorBd.getString(4);
                             textIdTask.setVisibility(View.VISIBLE);
                             textViewIdTask.setVisibility(View.VISIBLE);
                             updateButton.setVisibility(View.VISIBLE);
                             taskSave.setVisibility(View.INVISIBLE);
                             textIdTask.setText(String.valueOf(idTarefa));
                             taskName.setText(nomeTarefa);
+                            textDescription.setText(descricaoTarefa);
                             taskDate.setText(dataTarefa);
                         } while (cursorBd.moveToNext());
                     }
@@ -325,8 +360,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void ReadActivity() {
         bd = openOrCreateDatabase("taskg", MODE_PRIVATE, null);
-        String sqlQuery = "SELECT nome, data_task, priority FROM task WHERE data_task >= date('now')" +
-                " ORDER BY data_task ASC LIMIT 1";
+        String sqlQuery = "SELECT nome, data_task, priority FROM task WHERE completed = 0 AND data_task >= date('now') ORDER BY data_task ASC LIMIT 1";
         Cursor cursor = bd.rawQuery(sqlQuery, null);
         if (cursor.moveToFirst()) {
             String nameTask = cursor.getString(0);
